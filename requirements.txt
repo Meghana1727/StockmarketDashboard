@@ -14,3 +14,4 @@ pymongo
 bcrypt
 streamlit-extras
 mplfinance
+seaborn
