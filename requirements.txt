@@ -1,0 +1,16 @@
+streamlit
+google-generativeai
+matplotlib
+yfinance
+pandas
+plotly
+numpy
+statsmodels
+tensorflow
+scikit-learn
+beautifulsoup4
+requests
+pymongo
+bcrypt
+streamlit-extras
+mplfinance
