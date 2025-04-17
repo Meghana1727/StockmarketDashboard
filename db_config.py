@@ -10,7 +10,7 @@ MONGO_CLUSTER = "cluster0.ct7dekm.mongodb.net"
 MONGO_DB = "stock_market_dashboard"
 
 # ✅ Proper URI construction
-MONGO_URI = f"mongodb+srv://{MONGO_USER}:{MONGO_PASS}@{MONGO_CLUSTER}/{MONGO_DB}/"
+MONGO_URI = f"mongodb+srv://{MONGO_USER}:{MONGO_PASS}@{MONGO_CLUSTER}/{MONGO_DB}"
 
 # ✅ Connect with TLS cert verification
 client = pymongo.MongoClient(MONGO_URI, tlsCAFile=certifi.where())
