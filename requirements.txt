@@ -15,3 +15,5 @@ bcrypt
 streamlit-extras
 mplfinance
 seaborn
+pymongo[srv]
+certifi
