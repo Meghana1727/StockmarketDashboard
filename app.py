@@ -18,6 +18,10 @@ from nasdaq_visualization import nasdaq_visualization
 from stock_options import stock_options_page
 import mplfinance as mpf
 
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
+
 from datetime import datetime,timedelta
 from Stock_prediction import download_stock_data,predict_with_arima,plot_predictions,predict_with_lstm
 
