@@ -11,7 +11,7 @@ MONGO_CLUSTER = "cluster0.ct7dekm.mongodb.net"  # Your actual cluster hostname
 MONGO_DB = "stock_market_dashboard"
 
 # ✅ Construct the full MongoDB URI
-MONGO_URI = f"mongodb+srv://{MONGO_USER}:{MONGO_PASS}@{MONGO_CLUSTER}/?retryWrites=true&w=majority"
+MONGO_URI = f"mongodb+srv://{MONGO_USER}:{MONGO_PASS}@{MONGO_CLUSTER}/?retryWrites=true&w=majority&appName=Cluster0"
 
 # ✅ Connect to MongoDB
 client = pymongo.MongoClient(MONGO_URI)
