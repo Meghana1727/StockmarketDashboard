@@ -1,135 +1,148 @@
 import pymongo
 import bcrypt
-from urllib.parse import quote_plus
+import os
 import certifi
-import time
-from pymongo.server_api import ServerApi
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
-# ✅ MongoDB Atlas Credentials
-MONGO_USER = quote_plus("gorlipavanbhargav15@gmail.com")
-MONGO_PASS = quote_plus("Sunny@1572")
-MONGO_CLUSTER = "cluster0.ct7dekm.mongodb.net"
-MONGO_DB = "stock_market_dashboard"
-
-# ✅ Improved URI construction
-MONGO_URI = f"mongodb+srv://{MONGO_USER}:{MONGO_PASS}@{MONGO_CLUSTER}/{MONGO_DB}?retryWrites=true&w=majority"
-
-# Global connection flag
-connected = False
-client = None
-db = None
-users_collection = None
-
-def connect_to_mongodb():
-    global client, db, users_collection, connected
+# ✅ MongoDB connection setup with fallback to local storage
+class DatabaseHandler:
+    def __init__(self):
+        self.client = None
+        self.db = None
+        self.users_collection = None
+        self.connected = False
+        self.setup_connection()
+        
+    def setup_connection(self):
+        """Attempt to connect to MongoDB Atlas"""
+        try:
+            # MongoDB Atlas credentials
+            mongo_user = os.environ.get("MONGO_USER", "gorlipavanbhargav15%40gmail.com")
+            mongo_pass = os.environ.get("MONGO_PASS", "Sunny%401572")
+            mongo_cluster = "cluster0.ct7dekm.mongodb.net"
+            mongo_db = "stock_market_dashboard"
+            
+            # Build connection string
+            mongo_uri = f"mongodb+srv://{mongo_user}:{mongo_pass}@{mongo_cluster}/{mongo_db}?retryWrites=true&w=majority&tls=true"
+            
+            # Attempt connection with relaxed TLS/SSL settings
+            self.client = pymongo.MongoClient(
+                mongo_uri,
+                tlsCAFile=certifi.where(),
+                serverSelectionTimeoutMS=5000,  # Shorter timeout to fail fast
+                connectTimeoutMS=10000,
+                socketTimeoutMS=10000,
+                ssl_cert_reqs="CERT_NONE"  # Try with relaxed SSL verification
+            )
+            
+            # Test connection
+            self.client.admin.command('ping')
+            
+            # Setup collections
+            self.db = self.client[mongo_db]
+            self.users_collection = self.db["users"]
+            self.connected = True
+            print("✅ MongoDB connection successful!")
+            
+        except (ConnectionFailure, ServerSelectionTimeoutError) as e:
+            print(f"❌ MongoDB connection failed: {e}")
+            self.setup_local_fallback()
+            
+        except Exception as e:
+            print(f"❌ Unexpected error: {e}")
+            self.setup_local_fallback()
     
-    if connected:
-        return True
-        
-    try:
-        # ✅ Connect with improved parameters
-        client = pymongo.MongoClient(
-            MONGO_URI,
-            tlsCAFile=certifi.where(),
-            serverSelectionTimeoutMS=10000,
-            connectTimeoutMS=20000,
-            socketTimeoutMS=20000,
-            server_api=ServerApi('1')
-        )
-        
-        # Force connection attempt
-        client.server_info()
-        
-        # If we got here, connection successful
-        db = client[MONGO_DB]
-        users_collection = db["users"]
-        
-        # Create index to enforce unique usernames
-        users_collection.create_index([("username", pymongo.ASCENDING)], unique=True)
-        
-        connected = True
-        print("MongoDB connection successful!")
-        return True
-        
-    except (ConnectionFailure, ServerSelectionTimeoutError) as e:
-        print(f"MongoDB connection failed: {e}")
-        connected = False
-        return False
-    except Exception as e:
-        print(f"Unexpected error connecting to MongoDB: {e}")
-        connected = False
-        return False
+    def setup_local_fallback(self):
+        """Set up in-memory storage as fallback"""
+        print("⚠️ Using in-memory storage as fallback")
+        self.connected = False
+        self.users = {}  # In-memory user storage
+    
+    def add_user(self, username, password):
+        """Add a new user to the database or fallback storage"""
+        if not username or not password:
+            print("Username or password cannot be empty")
+            return False
+            
+        try:
+            if self.connected:
+                # Check if user exists in MongoDB
+                if self.users_collection.find_one({"username": username}):
+                    print(f"User {username} already exists")
+                    return False
+                
+                # Hash password and store user
+                hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+                self.users_collection.insert_one({
+                    "username": username,
+                    "password": hashed_password.decode("utf-8")
+                })
+            else:
+                # Check if user exists in fallback storage
+                if username in self.users:
+                    print(f"User {username} already exists")
+                    return False
+                
+                # Hash password and store user in fallback
+                hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+                self.users[username] = {
+                    "username": username,
+                    "password": hashed_password.decode("utf-8")
+                }
+                
+            print(f"✅ User {username} added successfully")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error adding user: {e}")
+            return False
+    
+    def get_user(self, username):
+        """Get user details from database or fallback storage"""
+        try:
+            if self.connected:
+                return self.users_collection.find_one({"username": username})
+            else:
+                return self.users.get(username)
+        except Exception as e:
+            print(f"❌ Error getting user: {e}")
+            return None
+    
+    def verify_user(self, username, password):
+        """Verify user credentials from database or fallback storage"""
+        try:
+            user = self.get_user(username)
+            if not user or "password" not in user:
+                return False
+                
+            stored_password = user["password"]
+            if isinstance(stored_password, str):
+                stored_password = stored_password.encode("utf-8")
+                
+            return bcrypt.checkpw(password.encode("utf-8"), stored_password)
+                
+        except Exception as e:
+            print(f"❌ Error verifying user: {e}")
+            return False
+    
+    def connection_status(self):
+        """Return the connection status"""
+        if self.connected:
+            return "Connected to MongoDB Atlas"
+        return "Using fallback storage (data will not persist)"
 
-# Try initial connection
-connect_to_mongodb()
+# Create a singleton instance
+db_handler = DatabaseHandler()
 
-# ✅ Get user details with retry logic
-def get_user(username):
-    if not connected and not connect_to_mongodb():
-        return None
-        
-    try:
-        return users_collection.find_one({"username": username})
-    except Exception as e:
-        print(f"Error getting user: {e}")
-        connected = False
-        return None
-
-# ✅ Add new user with robust error handling
+# Export functions for easy imports
 def add_user(username, password):
-    if not username or not password:
-        print("Username or password cannot be empty")
-        return False
-        
-    if not connected and not connect_to_mongodb():
-        print("Cannot connect to database")
-        return False
-        
-    try:
-        # Check if user exists
-        existing_user = users_collection.find_one({"username": username})
-        if existing_user:
-            print(f"User {username} already exists")
-            return False
-            
-        # Hash password
-        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
-        
-        # Insert user
-        result = users_collection.insert_one({
-            "username": username,
-            "password": hashed_password.decode("utf-8"),
-            "created_at": time.time()
-        })
-        
-        return result.acknowledged
-        
-    except pymongo.errors.DuplicateKeyError:
-        print(f"User {username} already exists (race condition)")
-        return False
-    except Exception as e:
-        print(f"Error adding user: {e}")
-        connected = False
-        return False
+    return db_handler.add_user(username, password)
 
-# ✅ Verify user with retry logic
+def get_user(username):
+    return db_handler.get_user(username)
+
 def verify_user(username, password):
-    if not connected and not connect_to_mongodb():
-        return False
-        
-    try:
-        user = get_user(username)
-        if not user or "password" not in user:
-            return False
-            
-        stored_password = user["password"]
-        if isinstance(stored_password, str):
-            stored_password = stored_password.encode("utf-8")
-            
-        return bcrypt.checkpw(password.encode("utf-8"), stored_password)
-        
-    except Exception as e:
-        print(f"Error verifying user: {e}")
-        connected = False
-        return False
+    return db_handler.verify_user(username, password)
+
+def get_connection_status():
+    return db_handler.connection_status()
