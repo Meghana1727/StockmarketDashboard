@@ -10,7 +10,7 @@ from wishlist import wishlist_page, get_wishlist, update_wishlist, stock_notific
 from news import get_stock_news
 from sector import sector_heatmap
 from constant import SECTORS
-import ssl
+
 from intrinsic import intrinsic_value_page
 from stock_screener import stock_screener_page
 from earnings_calender import earnings_calendar_page
@@ -20,7 +20,7 @@ import mplfinance as mpf
 
 from datetime import datetime,timedelta
 from Stock_prediction import download_stock_data,predict_with_arima,plot_predictions,predict_with_lstm
-ssl._create_default_https_context = ssl._create_unverified_context
+
 import seaborn as sns
 from sklearn.metrics import classification_report, confusion_matrix
 
