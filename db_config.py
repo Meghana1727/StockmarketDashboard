@@ -1,11 +1,21 @@
 import pymongo
 import bcrypt
 import os
+from urllib.parse import quote_plus
 
-# ✅ MongoDB Connection
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")  # Default to localhost for local dev
+# ✅ MongoDB Atlas Connection
+# Replace these with your actual MongoDB Atlas credentials
+MONGO_USER = quote_plus("gorlipavanbhargav15@gmail.com")
+MONGO_PASS = quote_plus("Sunny@1572")
+MONGO_CLUSTER = "cluster0.ct7dekm.mongodb.net"  # Your actual cluster hostname
+MONGO_DB = "stock_market_dashboard"
+
+# ✅ Construct the full MongoDB URI
+MONGO_URI = f"mongodb+srv://{MONGO_USER}:{MONGO_PASS}@{MONGO_CLUSTER}/?retryWrites=true&w=majority"
+
+# ✅ Connect to MongoDB
 client = pymongo.MongoClient(MONGO_URI)
-db = client["stock_market_dashboard"]
+db = client[MONGO_DB]
 users_collection = db["users"]
 
 # ✅ Function to fetch user details
