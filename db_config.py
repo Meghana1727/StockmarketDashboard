@@ -1,24 +1,25 @@
 import pymongo
 import bcrypt
-import os
 from urllib.parse import quote_plus
+import certifi
 
-# ✅ MongoDB Atlas Connection
-# Replace these with your actual MongoDB Atlas credentials
+# ✅ MongoDB Atlas Credentials (HARD-CODED — for demo/testing only)
 MONGO_USER = quote_plus("gorlipavanbhargav15@gmail.com")
 MONGO_PASS = quote_plus("Sunny@1572")
-MONGO_CLUSTER = "cluster0.ct7dekm.mongodb.net"  # Your actual cluster hostname
+MONGO_CLUSTER = "cluster0.ct7dekm.mongodb.net"
 MONGO_DB = "stock_market_dashboard"
 
-# ✅ Construct the full MongoDB URI
-MONGO_URI = f"mongodb+srv://{MONGO_USER}:{MONGO_PASS}@{MONGO_CLUSTER}/?retryWrites=true&w=majority&appName=Cluster0"
+# ✅ MongoDB URI with SSL
+MONGO_URI = f"mongodb+srv://{MONGO_USER}:{MONGO_PASS}@{MONGO_CLUSTER}/?retryWrites=true&w=majority&ssl=true"
 
-# ✅ Connect to MongoDB
-client = pymongo.MongoClient(MONGO_URI)
+# ✅ Connect with TLS certificate verification (IMPORTANT!)
+client = pymongo.MongoClient(MONGO_URI, tlsCAFile=certifi.where())
+
+# ✅ Select DB and Collection
 db = client[MONGO_DB]
 users_collection = db["users"]
 
-# ✅ Function to fetch user details
+# ✅ Get user details
 def get_user(username):
     """Retrieve user details from MongoDB."""
     user = users_collection.find_one({"username": username})
@@ -26,7 +27,7 @@ def get_user(username):
         return {"username": user["username"], "password": user["password"].encode("utf-8")}
     return None
 
-# ✅ Function to add a new user (with hashed password)
+# ✅ Add new user with hashed password
 def add_user(username, password):
     """Register a new user with hashed password."""
     if users_collection.find_one({"username": username}):
@@ -35,7 +36,7 @@ def add_user(username, password):
     users_collection.insert_one({"username": username, "password": hashed_password})
     return True
 
-# ✅ Function to verify user login
+# ✅ Verify user credentials
 def verify_user(username, password):
     """Check if the entered password matches the stored hashed password."""
     user = get_user(username)
