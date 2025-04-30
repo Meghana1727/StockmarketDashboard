@@ -13,7 +13,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 warnings.filterwarnings("ignore")
 
-
+@st.cache_data(ttl=86400)
 def download_stock_data(ticker: str, start_date: str, end_date: str) -> pd.DataFrame:
     """
     Download historical stock data using yfinance
@@ -26,7 +26,7 @@ def download_stock_data(ticker: str, start_date: str, end_date: str) -> pd.DataF
     except Exception as e:
         raise RuntimeError(f"Error fetching data: {e}")
 
-
+@st.cache_data(ttl=86400)
 def predict_with_arima(df: pd.DataFrame, steps: int = 30) -> pd.Series:
     """
     Predict future stock prices using ARIMA
@@ -39,7 +39,7 @@ def predict_with_arima(df: pd.DataFrame, steps: int = 30) -> pd.Series:
     except Exception as e:
         raise RuntimeError(f"ARIMA prediction failed: {e}")
 
-
+@st.cache_data(ttl=86400)
 def predict_with_lstm(df: pd.DataFrame, steps: int = 30) -> pd.Series:
     """
     Predict future stock prices using LSTM
@@ -79,7 +79,7 @@ def predict_with_lstm(df: pd.DataFrame, steps: int = 30) -> pd.Series:
     except Exception as e:
         raise RuntimeError(f"LSTM prediction failed: {e}")
 
-
+@st.cache_data(ttl=86400)
 def plot_predictions(original_df: pd.DataFrame, predicted_series: pd.Series, model_name: str):
     """
     Plot original and predicted data using matplotlib and return the figure
