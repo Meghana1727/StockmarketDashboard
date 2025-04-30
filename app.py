@@ -22,7 +22,6 @@ import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
 from datetime import datetime, timedelta
-@st.cache_data(ttl=86400)
 from Stock_prediction import download_stock_data,predict_with_arima,plot_predictions,predict_with_lstm
 
 import seaborn as sns
