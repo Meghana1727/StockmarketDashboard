@@ -18,13 +18,13 @@ def configure_mongodb():
     
     try:
         # MongoDB Atlas credentials (URL-encoded)
-        mongo_user = "gorlipavanbhargav15%40gmail.com"
-        mongo_pass = "Sunny%401572"
-        mongo_cluster = "cluster0.ct7dekm.mongodb.net"
+        mongo_user = "mg23488n2pace.edu"
+        mongo_pass = "Meghana@1829"
+        mongo_cluster = "stock.7oyy7nd.mongodb.net"
         mongo_db = "stock_market_dashboard"
         
         # Build connection string
-        mongo_uri = f"mongodb+srv://{mongo_user}:{mongo_pass}@{mongo_cluster}/{mongo_db}?retryWrites=true&w=majority"
+        mongo_uri = f"mongodb+srv://mg23488n:<db_password>@stock.7oyy7nd.mongodb.net/?retryWrites=true&w=majority&appName=Stock"
         
         # Connect with relaxed SSL settings
         client = pymongo.MongoClient(
