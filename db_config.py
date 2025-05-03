@@ -18,7 +18,7 @@ def configure_mongodb():
     
     try:
         # MongoDB Atlas credentials (URL-encoded)
-        mongo_user = "mg23488n2pace.edu"
+        mongo_user = "mg23488n@pace.edu"
         mongo_pass = "Meghana@1829"
         mongo_cluster = "stock.7oyy7nd.mongodb.net"
         mongo_db = "stock_market_dashboard"
